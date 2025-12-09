@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUIZ DOS VELOSO - Painel do Operador</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF6B6B;
+            --secondary: #4ECDC4;
+            --accent: #FFE66D;
+            --purple: #A855F7;
+            --blue: #3B82F6;
+            --green: #22C55E;
+            --orange: #F97316;
+            --pink: #EC4899;
+            --dark: #1E1B4B;
+            --darker: #0F0D24;
+            --light: #F8FAFC;
+            --gradient-mario: linear-gradient(135deg, #FF6B6B 0%, #FFE66D 50%, #4ECDC4 100%);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--darker);
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: var(--light);
+        }
+        .bg-animation {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; background: var(--darker);
+        }
+        .bg-animation::before {
+            content: ''; position: absolute; top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle at 20% 80%, rgba(78,205,196,0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(255,107,107,0.15) 0%, transparent 50%);
+            animation: bgPulse 15s ease-in-out infinite;
+        }
+        @keyframes bgPulse { 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(-5%,-5%) scale(1.1);} }
+        .stars-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; }
+        .star { position: absolute; animation: floatStar 8s ease-in-out infinite; opacity: 0.6; }
+        @keyframes floatStar { 0%,100%{transform:translateY(0) rotate(0);opacity:0.6;} 50%{transform:translateY(-30px) rotate(180deg);opacity:1;} }
+        .container { max-width: 1600px; margin: 0 auto; padding: 20px; min-height: 100vh; }
+        .logo-container { text-align: center; margin-bottom: 30px; }
+        .logo {
+            font-family: 'Fredoka One', cursive; font-size: 4rem;
+            background: var(--gradient-mario); -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent; background-clip: text;
+            animation: logoFloat 3s ease-in-out infinite; display: inline-block;
+        }
+        @keyframes logoFloat { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
+        .logo-subtitle { font-size: 1.2rem; color: var(--accent); letter-spacing: 3px; text-transform: uppercase; }
+        .last-champion {
+            position: fixed; top: 20px; right: 20px;
+            background: linear-gradient(145deg, rgba(30,27,75,0.95), rgba(15,13,36,0.95));
+            border-radius: 20px; padding: 15px; border: 2px solid var(--accent);
+            text-align: center; z-index: 50; display: none;
+        }
+        .last-champion.visible { display: block; }
+        .last-champion-title { font-size: 0.8rem; color: var(--accent); margin-bottom: 10px; }
+        .champion-wrapper { position: relative; display: inline-block; }
+        .crown { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 1.8rem; animation: crownBounce 2s ease-in-out infinite; }
+        @keyframes crownBounce { 0%,100%{transform:translateX(-50%) translateY(0);} 50%{transform:translateX(-50%) translateY(-5px);} }
+        .last-champion-avatar { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid gold; }
+        .last-champion-name { margin-top: 8px; font-weight: 700; font-size: 0.85rem; }
+        .screen { display: none; animation: fadeIn 0.5s ease; }
+        .screen.active { display: block; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
+        .setup-grid { display: grid; grid-template-columns: 1fr 400px; gap: 30px; align-items: start; }
+        .card {
+            background: linear-gradient(145deg, rgba(30,27,75,0.9), rgba(15,13,36,0.9));
+            border-radius: 24px; padding: 25px; border: 2px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px); margin-bottom: 25px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+        .card-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid rgba(255,255,255,0.1); }
+        .card-icon { width: 50px; height: 50px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .card-title { font-family: 'Fredoka One', cursive; font-size: 1.5rem; }
+        .question-count-selector { display: flex; gap: 15px; flex-wrap: wrap; }
+        .count-btn {
+            flex: 1; min-width: 80px; padding: 20px;
+            border: 3px solid rgba(255,255,255,0.2); border-radius: 16px;
+            background: rgba(255,255,255,0.05); color: var(--light);
+            font-family: 'Fredoka One', cursive; font-size: 2rem; cursor: pointer;
+            transition: all 0.3s;
+        }
+        .count-btn:hover { transform: translateY(-5px) scale(1.05); border-color: var(--accent); }
+        .count-btn.selected { background: var(--gradient-mario); border-color: transparent; transform: scale(1.05); }
+        .questions-list, .prizes-list { max-height: 220px; overflow-y: auto; margin-bottom: 20px; padding-right: 10px; }
+        .questions-list::-webkit-scrollbar, .prizes-list::-webkit-scrollbar { width: 8px; }
+        .questions-list::-webkit-scrollbar-track, .prizes-list::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
+        .questions-list::-webkit-scrollbar-thumb, .prizes-list::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
+        .question-item, .prize-item {
+            display: flex; align-items: center; gap: 15px; padding: 12px;
+            background: rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 10px; transition: all 0.3s;
+        }
+        .question-item:hover, .prize-item:hover { background: rgba(255,255,255,0.1); transform: translateX(5px); }
+        .question-number, .prize-position {
+            width: 36px; height: 36px; background: linear-gradient(135deg, #4facfe, #00f2fe);
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            font-family: 'Fredoka One', cursive; font-size: 1rem; flex-shrink: 0;
+        }
+        .prize-position.gold { background: linear-gradient(135deg, #FFD700, #B8860B); }
+        .prize-position.silver { background: linear-gradient(135deg, #C0C0C0, #808080); }
+        .prize-position.bronze { background: linear-gradient(135deg, #CD7F32, #8B4513); }
+        .question-text, .prize-name { flex: 1; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .prize-image { width: 45px; height: 45px; border-radius: 8px; object-fit: cover; }
+        .question-actions, .prize-actions { display: flex; gap: 6px; }
+        .question-actions button, .prize-actions button {
+            width: 32px; height: 32px; border: none; border-radius: 8px; cursor: pointer;
+            transition: all 0.3s; font-size: 0.9rem;
+        }
+        .btn-edit { background: var(--blue); color: white; }
+        .btn-delete { background: var(--primary); color: white; }
+        .question-actions button:hover, .prize-actions button:hover { transform: scale(1.15); }
+        .btn-add-question, .btn-add-prize {
+            width: 100%; padding: 12px; border: 3px dashed rgba(255,255,255,0.3);
+            border-radius: 16px; background: transparent; color: var(--light);
+            font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .btn-add-question:hover, .btn-add-prize:hover { border-color: var(--secondary); background: rgba(78,205,196,0.1); }
+        .qr-section { text-align: center; }
+        .qr-container { background: white; padding: 20px; border-radius: 20px; display: inline-block; margin: 15px 0; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        #qrcode { width: 180px; height: 180px; }
+        #qrcode img { border-radius: 10px; }
+        .qr-label { margin-top: 10px; font-size: 1rem; color: var(--accent); font-weight: 700; }
+        .players-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin-top: 15px; max-height: 280px; overflow-y: auto; }
+        .player-card {
+            text-align: center; padding: 10px 6px; background: rgba(255,255,255,0.05);
+            border-radius: 14px; transition: all 0.3s; animation: playerJoin 0.5s ease; position: relative;
+        }
+        @keyframes playerJoin { from{opacity:0;transform:scale(0.5) rotate(-10deg);} to{opacity:1;transform:scale(1) rotate(0);} }
+        .player-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.1); }
+        .player-avatar { width: 55px; height: 55px; border-radius: 50%; margin: 0 auto 6px; border: 2px solid var(--accent); object-fit: cover; }
+        .player-name { font-weight: 700; font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .btn-remove-player {
+            position: absolute; top: 3px; right: 3px; width: 20px; height: 20px;
+            border-radius: 50%; background: var(--primary); border: none; color: white;
+            font-size: 0.7rem; cursor: pointer; opacity: 0; transition: all 0.3s;
+        }
+        .player-card:hover .btn-remove-player { opacity: 1; }
+        .player-count { text-align: center; padding: 12px; background: rgba(78,205,196,0.2); border-radius: 12px; margin-bottom: 12px; }
+        .player-count-number { font-family: 'Fredoka One', cursive; font-size: 2.5rem; color: var(--secondary); }
+        .player-count-label { font-size: 0.85rem; opacity: 0.8; }
+        .btn-primary {
+            width: 100%; padding: 18px 40px; border: none; border-radius: 20px;
+            font-family: 'Fredoka One', cursive; font-size: 1.4rem; cursor: pointer;
+            transition: all 0.3s; text-transform: uppercase; letter-spacing: 2px;
+        }
+        .btn-start { background: linear-gradient(135deg, var(--green), #10B981); color: white; box-shadow: 0 10px 40px rgba(34,197,94,0.4); }
+        .btn-start:hover:not(:disabled) { transform: translateY(-5px) scale(1.02); box-shadow: 0 20px 60px rgba(34,197,94,0.5); }
+        .btn-start:disabled { background: #444; cursor: not-allowed; box-shadow: none; }
+        .btn-reset {
+            position: fixed; bottom: 20px; right: 20px; padding: 12px 20px;
+            background: linear-gradient(135deg, #DC2626, #B91C1C); color: white; border: none;
+            border-radius: 15px; font-weight: 700; font-size: 0.85rem; cursor: pointer;
+            transition: all 0.3s; z-index: 100;
+        }
+        .btn-reset:hover { transform: scale(1.05); }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: none; align-items: center;
+            justify-content: center; z-index: 1000; backdrop-filter: blur(10px);
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: linear-gradient(145deg, var(--dark), var(--darker));
+            border-radius: 30px; padding: 35px; max-width: 550px; width: 90%;
+            max-height: 90vh; overflow-y: auto; border: 2px solid rgba(255,255,255,0.1);
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn { from{opacity:0;transform:scale(0.9) translateY(20px);} to{opacity:1;transform:scale(1) translateY(0);} }
+        .modal-title {
+            font-family: 'Fredoka One', cursive; font-size: 1.6rem; margin-bottom: 25px;
+            text-align: center; background: var(--gradient-mario);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .form-group { margin-bottom: 18px; }
+        .form-label { display: block; margin-bottom: 6px; font-weight: 700; }
+        .form-input {
+            width: 100%; padding: 14px; border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px; background: rgba(255,255,255,0.05); color: var(--light);
+            font-size: 1rem; transition: all 0.3s;
+        }
+        .form-input:focus { outline: none; border-color: var(--secondary); background: rgba(255,255,255,0.1); }
+        .form-input::placeholder { color: rgba(255,255,255,0.4); }
+        textarea.form-input { resize: vertical; min-height: 70px; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .option-item { display: flex; align-items: center; gap: 8px; }
+        .option-label {
+            width: 36px; height: 36px; background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            font-family: 'Fredoka One', cursive; font-size: 1.1rem; flex-shrink: 0;
+        }
+        .option-item input[type="text"] { flex: 1; }
+        .option-item input[type="radio"] { width: 22px; height: 22px; accent-color: var(--green); cursor: pointer; }
+        .image-upload-area {
+            border: 2px dashed rgba(255,255,255,0.2); border-radius: 16px;
+            padding: 25px; text-align: center; cursor: pointer; transition: all 0.3s;
+        }
+        .image-upload-area:hover { border-color: var(--secondary); background: rgba(78,205,196,0.1); }
+        .image-upload-area.has-image { padding: 10px; }
+        .image-preview { max-width: 100%; max-height: 180px; border-radius: 12px; display: none; }
+        .image-preview.visible { display: block; margin: 0 auto; }
+        .modal-actions { display: flex; gap: 12px; margin-top: 25px; }
+        .btn-modal { flex: 1; padding: 14px; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.3s; }
+        .btn-cancel { background: rgba(255,255,255,0.1); color: var(--light); }
+        .btn-cancel:hover { background: rgba(255,255,255,0.2); }
+        .btn-save { background: linear-gradient(135deg, #4facfe, #00f2fe); color: white; }
+        .btn-save:hover { transform: translateY(-2px); }
+        .game-container { display: grid; grid-template-columns: 1fr 280px; gap: 30px; min-height: calc(100vh - 200px); }
+        .question-display { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .question-counter { font-family: 'Fredoka One', cursive; font-size: 1.4rem; color: var(--accent); margin-bottom: 15px; }
+        .progress-bar-container { width: 100%; max-width: 600px; height: 10px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-bottom: 35px; }
+        .progress-bar { height: 100%; background: var(--gradient-mario); border-radius: 10px; transition: width 0.5s ease; }
+        .current-question-text { font-family: 'Fredoka One', cursive; font-size: 2.3rem; line-height: 1.3; max-width: 850px; margin-bottom: 25px; }
+        .current-question-image { max-width: 450px; max-height: 320px; border-radius: 20px; margin-bottom: 25px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); display: none; }
+        .current-question-image.visible { display: block; }
+        .timer-container { margin: 20px 0; display: none; }
+        .timer-container.active { display: block; }
+        .timer-circle {
+            width: 140px; height: 140px; border-radius: 50%;
+            background: conic-gradient(var(--primary) 360deg, rgba(255,255,255,0.1) 0deg);
+            display: flex; align-items: center; justify-content: center; margin: 0 auto;
+            box-shadow: 0 10px 40px rgba(255,107,107,0.4);
+        }
+        .timer-inner { width: 110px; height: 110px; border-radius: 50%; background: var(--darker); display: flex; align-items: center; justify-content: center; }
+        .timer-number { font-family: 'Fredoka One', cursive; font-size: 3rem; color: var(--primary); }
+        .timer-text { font-family: 'Fredoka One', cursive; font-size: 1.8rem; color: var(--accent); margin-top: 12px; animation: timerPulse 0.5s ease-in-out infinite; }
+        @keyframes timerPulse { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.1);opacity:0.8;} }
+        .game-buttons { display: flex; gap: 15px; margin-top: 25px; flex-wrap: wrap; justify-content: center; }
+        .btn-timer {
+            padding: 14px 28px; background: linear-gradient(135deg, var(--orange), var(--primary));
+            color: white; border: none; border-radius: 15px; font-family: 'Fredoka One', cursive;
+            font-size: 1rem; cursor: pointer; transition: all 0.3s;
+        }
+        .btn-timer:hover { transform: translateY(-3px) scale(1.05); }
+        .btn-timer:disabled { background: #444; cursor: not-allowed; }
+        .btn-next {
+            padding: 18px 50px; background: linear-gradient(135deg, var(--purple), var(--pink));
+            color: white; border: none; border-radius: 20px; font-family: 'Fredoka One', cursive;
+            font-size: 1.2rem; cursor: pointer; transition: all 0.3s;
+        }
+        .btn-next:hover { transform: translateY(-5px) scale(1.05); }
+        .players-sidebar { background: rgba(30,27,75,0.8); border-radius: 24px; padding: 18px; border: 2px solid rgba(255,255,255,0.1); }
+        .sidebar-title { font-family: 'Fredoka One', cursive; font-size: 1.2rem; margin-bottom: 15px; text-align: center; color: var(--accent); }
+        .game-players-list { display: flex; flex-direction: column; gap: 8px; max-height: calc(100vh - 320px); overflow-y: auto; }
+        .game-player-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 12px; }
+        .game-player-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
+        .game-player-info { flex: 1; }
+        .game-player-name { font-weight: 700; font-size: 0.9rem; }
+        .game-player-status { font-size: 0.75rem; opacity: 0.7; }
+        .status-indicator { width: 18px; height: 18px; border-radius: 50%; background: var(--orange); animation: pulse 1.5s infinite; }
+        .status-indicator.answered { background: var(--green); animation: none; }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.6;transform:scale(0.9);} }
+        .animation-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--darker); display: none; align-items: center;
+            justify-content: center; z-index: 2000; flex-direction: column;
+        }
+        .animation-overlay.active { display: flex; }
+        .animation-container { width: 100%; height: 100%; position: relative; overflow: hidden; }
+        .intro-title {
+            font-family: 'Fredoka One', cursive; font-size: 3.5rem;
+            background: var(--gradient-mario); -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent; background-clip: text;
+            text-align: center; position: absolute; width: 100%; top: 8%;
+            animation: introTitleBounce 1s ease-in-out infinite; z-index: 10;
+        }
+        @keyframes introTitleBounce { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
+        .floating-avatar {
+            position: absolute; border-radius: 50%; border: 3px solid var(--accent);
+            object-fit: cover; box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+        }
+        .prize-showcase { position: absolute; bottom: 12%; left: 50%; transform: translateX(-50%); text-align: center; z-index: 10; }
+        .prize-showcase-title { font-family: 'Fredoka One', cursive; font-size: 1.8rem; color: var(--accent); margin-bottom: 15px; }
+        .prize-showcase-items { display: flex; gap: 25px; justify-content: center; }
+        .prize-showcase-item { text-align: center; animation: prizeFloat 2s ease-in-out infinite; }
+        .prize-showcase-item:nth-child(2) { animation-delay: 0.3s; }
+        .prize-showcase-item:nth-child(3) { animation-delay: 0.6s; }
+        @keyframes prizeFloat { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-12px);} }
+        .prize-showcase-image { width: 90px; height: 90px; border-radius: 12px; object-fit: cover; border: 3px solid; margin-bottom: 8px; }
+        .prize-showcase-item:nth-child(1) .prize-showcase-image { border-color: gold; }
+        .prize-showcase-item:nth-child(2) .prize-showcase-image { border-color: silver; }
+        .prize-showcase-item:nth-child(3) .prize-showcase-image { border-color: #CD7F32; }
+        .prize-showcase-name { font-weight: 700; font-size: 0.85rem; }
+        .final-shuffle-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+        .shuffle-title { font-family: 'Fredoka One', cursive; font-size: 2.8rem; color: var(--accent); margin-bottom: 35px; animation: shuffleTitlePulse 0.5s ease-in-out infinite; }
+        @keyframes shuffleTitlePulse { 0%,100%{opacity:1;} 50%{opacity:0.7;} }
+        .shuffle-avatars { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; max-width: 750px; }
+        .shuffle-avatar { width: 75px; height: 75px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent); animation: shuffleSpin 0.3s linear infinite; }
+        @keyframes shuffleSpin { from{transform:rotate(0) scale(1);} to{transform:rotate(360deg) scale(1);} }
+        .winner-reveal { display: none; flex-direction: column; align-items: center; animation: winnerReveal 1s ease; }
+        .winner-reveal.active { display: flex; }
+        @keyframes winnerReveal { from{transform:scale(0);opacity:0;} to{transform:scale(1);opacity:1;} }
+        .winner-crown { font-size: 4.5rem; animation: crownBounce 1s ease-in-out infinite; }
+        .winner-avatar { width: 180px; height: 180px; border-radius: 50%; border: 6px solid gold; object-fit: cover; margin: 15px 0; box-shadow: 0 0 50px rgba(255,215,0,0.6); }
+        .winner-name { font-family: 'Fredoka One', cursive; font-size: 2.8rem; color: var(--accent); }
+        .winner-score { font-size: 1.4rem; color: var(--secondary); margin-top: 8px; }
+        .results-container { text-align: center; padding: 35px; }
+        .results-title { font-family: 'Fredoka One', cursive; font-size: 3rem; margin-bottom: 40px; background: var(--gradient-mario); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: resultsBounce 0.8s ease; }
+        @keyframes resultsBounce { 0%{transform:scale(0);opacity:0;} 50%{transform:scale(1.1);} 100%{transform:scale(1);opacity:1;} }
+        .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 18px; margin-bottom: 50px; min-height: 380px; }
+        .podium-place { display: flex; flex-direction: column; align-items: center; animation: podiumRise 1s ease forwards; opacity: 0; }
+        .podium-place:nth-child(1) { animation-delay: 0.8s; }
+        .podium-place:nth-child(2) { animation-delay: 0.4s; }
+        .podium-place:nth-child(3) { animation-delay: 1.2s; }
+        @keyframes podiumRise { from{opacity:0;transform:translateY(100px);} to{opacity:1;transform:translateY(0);} }
+        .podium-avatar { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; margin-bottom: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
+        .podium-place:nth-child(2) .podium-avatar { width: 120px; height: 120px; border: 4px solid var(--accent); }
+        .podium-crown { font-size: 2.2rem; margin-bottom: -8px; animation: crownBounce 2s ease-in-out infinite; }
+        .podium-name { font-family: 'Fredoka One', cursive; font-size: 1.2rem; margin-bottom: 8px; }
+        .podium-score { font-weight: 700; color: var(--secondary); margin-bottom: 12px; }
+        .podium-prize { font-size: 0.85rem; color: var(--accent); margin-bottom: 8px; }
+        .podium-prize-image { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; margin-bottom: 12px; }
+        .podium-stand { border-radius: 15px 15px 0 0; width: 140px; display: flex; align-items: center; justify-content: center; font-family: 'Fredoka One', cursive; font-size: 2.8rem; color: rgba(255,255,255,0.9); }
+        .podium-place:nth-child(1) .podium-stand { background: linear-gradient(180deg, #C0C0C0, #808080); height: 110px; }
+        .podium-place:nth-child(2) .podium-stand { background: linear-gradient(180deg, #FFD700, #B8860B); height: 150px; }
+        .podium-place:nth-child(3) .podium-stand { background: linear-gradient(180deg, #CD7F32, #8B4513); height: 75px; }
+        .ranking-table-container { max-width: 750px; margin: 0 auto; }
+        .ranking-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+        .ranking-table th { text-align: left; padding: 12px 18px; font-family: 'Fredoka One', cursive; font-size: 0.95rem; color: var(--accent); border-bottom: 2px solid rgba(255,255,255,0.1); }
+        .ranking-table td { padding: 12px 18px; background: rgba(255,255,255,0.05); }
+        .ranking-table tr td:first-child { border-radius: 12px 0 0 12px; }
+        .ranking-table tr td:last-child { border-radius: 0 12px 12px 0; }
+        .ranking-position { font-family: 'Fredoka One', cursive; font-size: 1.4rem; width: 45px; }
+        .ranking-position.gold { color: #FFD700; }
+        .ranking-position.silver { color: #C0C0C0; }
+        .ranking-position.bronze { color: #CD7F32; }
+        .ranking-player { display: flex; align-items: center; gap: 12px; }
+        .ranking-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; }
+        .results-buttons { display: flex; gap: 18px; justify-content: center; margin-top: 45px; flex-wrap: wrap; }
+        .btn-share { padding: 14px 35px; background: linear-gradient(135deg, var(--blue), var(--purple)); color: white; border: none; border-radius: 15px; font-family: 'Fredoka One', cursive; font-size: 1.1rem; cursor: pointer; transition: all 0.3s; }
+        .btn-share:hover { transform: translateY(-3px) scale(1.05); }
+        .btn-new-game { padding: 18px 55px; background: var(--gradient-mario); color: white; border: none; border-radius: 20px; font-family: 'Fredoka One', cursive; font-size: 1.4rem; cursor: pointer; transition: all 0.3s; }
+        .btn-new-game:hover { transform: translateY(-5px) scale(1.05); }
+        .confetti-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3000; overflow: hidden; }
+        .confetti { position: absolute; animation: confettiFall 4s linear forwards; }
+        @keyframes confettiFall { 0%{transform:translateY(-100px) rotate(0);opacity:1;} 100%{transform:translateY(100vh) rotate(720deg);opacity:0;} }
+        .empty-state { text-align: center; padding: 30px; color: rgba(255,255,255,0.5); }
+        .empty-state-icon { font-size: 3rem; margin-bottom: 10px; }
+        .confirm-modal-content { text-align: center; }
+        .confirm-modal-icon { font-size: 3.5rem; margin-bottom: 15px; }
+        .confirm-modal-text { font-size: 1.1rem; margin-bottom: 25px; line-height: 1.6; }
+        .confirm-input { margin-bottom: 18px; }
+        .confirm-input input { text-align: center; font-size: 1.1rem; }
+        .waiting-modal { text-align: center; }
+        .waiting-list { margin: 18px 0; max-height: 180px; overflow-y: auto; }
+        .waiting-player { display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255,165,0,0.2); border-radius: 10px; margin-bottom: 8px; }
+        .waiting-player img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; }
+        #shareCanvas { display: none; }
+        @media (max-width: 1200px) {
+            .setup-grid { grid-template-columns: 1fr; }
+            .game-container { grid-template-columns: 1fr; }
+            .players-sidebar { order: -1; }
+            .game-players-list { flex-direction: row; flex-wrap: wrap; max-height: none; }
+            .game-player-item { flex: 0 0 auto; }
+        }
+        @media (max-width: 768px) {
+            .logo { font-size: 2.2rem; }
+            .current-question-text { font-size: 1.4rem; }
+            .podium-container { flex-wrap: wrap; }
+            .intro-title { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+    <div class="stars-container" id="starsContainer"></div>
+    <div class="last-champion" id="lastChampion">
+        <div class="last-champion-title">👑 ÚLTIMO CAMPEÃO</div>
+        <div class="champion-wrapper">
+            <span class="crown">👑</span>
+            <img class="last-champion-avatar" id="lastChampionAvatar" src="" alt="">
+        </div>
+        <div class="last-champion-name" id="lastChampionName"></div>
+    </div>
+    <div class="container">
+        <div class="logo-container">
+            <h1 class="logo">⭐ QUIZ DOS VELOSO ⭐</h1>
+            <p class="logo-subtitle">Painel do Operador</p>
+        </div>
+        <div class="screen active" id="setupScreen">
+            <div class="setup-grid">
+                <div class="left-column">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon" style="background:linear-gradient(135deg,#667eea,#764ba2);">🎯</div>
+                            <h2 class="card-title">Quantidade de Perguntas</h2>
+                        </div>
+                        <div class="question-count-selector">
+                            <button class="count-btn" data-count="5">5</button>
+                            <button class="count-btn selected" data-count="10">10</button>
+                            <button class="count-btn" data-count="15">15</button>
+                            <button class="count-btn" data-count="20">20</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon" style="background:linear-gradient(135deg,#f093fb,#f5576c);">📝</div>
+                            <h2 class="card-title">Perguntas (<span id="questionsCount">0</span>)</h2>
+                        </div>
+                        <div class="questions-list" id="questionsList"><div class="empty-state"><div class="empty-state-icon">📋</div><p>Nenhuma pergunta</p></div></div>
+                        <button class="btn-add-question" onclick="openQuestionModal()">➕ ADICIONAR PERGUNTA</button>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon" style="background:linear-gradient(135deg,#FFD700,#FFA500);">🏆</div>
+                            <h2 class="card-title">Prêmios</h2>
+                        </div>
+                        <div class="prizes-list" id="prizesList"><div class="empty-state"><div class="empty-state-icon">🎁</div><p>Nenhum prêmio (opcional)</p></div></div>
+                        <button class="btn-add-prize" onclick="openPrizeModal()">➕ ADICIONAR PRÊMIO</button>
+                    </div>
+                </div>
+                <div class="right-column">
+                    <div class="card qr-section">
+                        <div class="card-header">
+                            <div class="card-icon" style="background:linear-gradient(135deg,#4facfe,#00f2fe);">📱</div>
+                            <h2 class="card-title">Escaneie para Jogar</h2>
+                        </div>
+                        <div class="qr-container"><div id="qrcode"></div></div>
+                        <p class="qr-label">📷 Aponte a câmera!</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon" style="background:linear-gradient(135deg,var(--orange),var(--pink));">👥</div>
+                            <h2 class="card-title">Jogadores</h2>
+                        </div>
+                        <div class="player-count">
+                            <div class="player-count-number" id="playerCountNumber">0</div>
+                            <div class="player-count-label">conectados</div>
+                        </div>
+                        <div class="players-grid" id="playersGrid"><div class="empty-state"><div class="empty-state-icon">🎮</div><p>Aguardando...</p></div></div>
+                    </div>
+                    <button class="btn-primary btn-start" id="btnStartGame" disabled onclick="startGame()">🚀 INICIAR JOGO</button>
+                </div>
+            </div>
+        </div>
+        <div class="screen" id="gameScreen">
+            <div class="game-container">
+                <div class="question-display">
+                    <div class="question-counter" id="questionCounter">Pergunta 1 de 10</div>
+                    <div class="progress-bar-container"><div class="progress-bar" id="progressBar" style="width:10%"></div></div>
+                    <img class="current-question-image" id="currentQuestionImage" src="" alt="">
+                    <h2 class="current-question-text" id="currentQuestionText">Carregando...</h2>
+                    <div class="timer-container" id="timerContainer">
+                        <div class="timer-circle" id="timerCircle"><div class="timer-inner"><span class="timer-number" id="timerNumber">10</span></div></div>
+                        <div class="timer-text">⏱️ TEMPO!</div>
+                    </div>
+                    <div class="game-buttons">
+                        <button class="btn-timer" id="btnTimer" onclick="startTimer()">⏱️ TIMER (10s)</button>
+                        <button class="btn-next" onclick="nextQuestion()">PRÓXIMA ➡️</button>
+                    </div>
+                </div>
+                <div class="players-sidebar">
+                    <h3 class="sidebar-title">🎮 Respostas</h3>
+                    <div class="game-players-list" id="gamePlayersList"></div>
+                </div>
+            </div>
+        </div>
+        <div class="screen" id="resultsScreen">
+            <div class="results-container">
+                <h1 class="results-title">🏆 RESULTADO FINAL 🏆</h1>
+                <div class="podium-container" id="podiumContainer"></div>
+                <div class="ranking-table-container">
+                    <table class="ranking-table">
+                        <thead><tr><th>Pos.</th><th>Jogador</th><th>Acertos</th><th>%</th></tr></thead>
+                        <tbody id="rankingTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="results-buttons">
+                    <button class="btn-share" onclick="shareResults()">📤 COMPARTILHAR</button>
+                    <button class="btn-new-game" onclick="newGame()">🎮 NOVO JOGO</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <button class="btn-reset" onclick="openResetModal()">🗑️ RESET</button>
+    <div class="modal-overlay" id="questionModal">
+        <div class="modal">
+            <h2 class="modal-title">📝 Pergunta</h2>
+            <form id="questionForm">
+                <input type="hidden" id="editingQuestionId">
+                <div class="form-group"><label class="form-label">Texto</label><textarea class="form-input" id="questionText" placeholder="Digite a pergunta..." required></textarea></div>
+                <div class="form-group"><label class="form-label">Imagem (opcional)</label><div class="image-upload-area" onclick="document.getElementById('questionImage').click()"><input type="file" id="questionImage" accept="image/*" style="display:none" onchange="previewQuestionImage(this)"><img class="image-preview" id="questionImagePreview" src="" alt=""><div id="questionUploadPlaceholder"><div style="font-size:2.5rem;margin-bottom:8px;">📷</div><p>Clique para adicionar</p></div></div></div>
+                <div class="form-group"><label class="form-label">Opções (marque a correta)</label><div class="options-grid"><div class="option-item"><div class="option-label">A</div><input type="text" class="form-input" id="optionA" placeholder="Opção A" required><input type="radio" name="correct" value="0" required></div><div class="option-item"><div class="option-label">B</div><input type="text" class="form-input" id="optionB" placeholder="Opção B" required><input type="radio" name="correct" value="1"></div><div class="option-item"><div class="option-label">C</div><input type="text" class="form-input" id="optionC" placeholder="Opção C" required><input type="radio" name="correct" value="2"></div><div class="option-item"><div class="option-label">D</div><input type="text" class="form-input" id="optionD" placeholder="Opção D" required><input type="radio" name="correct" value="3"></div></div></div>
+                <div class="modal-actions"><button type="button" class="btn-modal btn-cancel" onclick="closeQuestionModal()">Cancelar</button><button type="submit" class="btn-modal btn-save">💾 Salvar</button></div>
+            </form>
+        </div>
+    </div>
+    <div class="modal-overlay" id="prizeModal">
+        <div class="modal">
+            <h2 class="modal-title">🏆 Prêmio</h2>
+            <form id="prizeForm">
+                <input type="hidden" id="editingPrizeId">
+                <div class="form-group"><label class="form-label">Posição</label><select class="form-input" id="prizePosition" required><option value="1">🥇 1º Lugar</option><option value="2">🥈 2º Lugar</option><option value="3">🥉 3º Lugar</option></select></div>
+                <div class="form-group"><label class="form-label">Nome do Prêmio</label><input type="text" class="form-input" id="prizeName" placeholder="Ex: Vale R$100" required></div>
+                <div class="form-group"><label class="form-label">Foto</label><div class="image-upload-area" onclick="document.getElementById('prizeImage').click()"><input type="file" id="prizeImage" accept="image/*" style="display:none" onchange="previewPrizeImage(this)"><img class="image-preview" id="prizeImagePreview" src="" alt=""><div id="prizeUploadPlaceholder"><div style="font-size:2.5rem;margin-bottom:8px;">🎁</div><p>Clique para adicionar</p></div></div></div>
+                <div class="modal-actions"><button type="button" class="btn-modal btn-cancel" onclick="closePrizeModal()">Cancelar</button><button type="submit" class="btn-modal btn-save">💾 Salvar</button></div>
+            </form>
+        </div>
+    </div>
+    <div class="modal-overlay" id="resetModal">
+        <div class="modal"><div class="confirm-modal-content"><div class="confirm-modal-icon">⚠️</div><h2 class="modal-title">Reset Total</h2><p class="confirm-modal-text">Isso irá apagar <strong>tudo</strong>. Digite <strong>CONFIRMAR</strong>:</p><div class="confirm-input"><input type="text" class="form-input" id="confirmResetInput" placeholder="CONFIRMAR"></div><div class="modal-actions"><button class="btn-modal btn-cancel" onclick="closeResetModal()">Cancelar</button><button class="btn-modal btn-save" style="background:linear-gradient(135deg,#DC2626,#B91C1C);" onclick="confirmReset()">🗑️ Apagar</button></div></div></div>
+    </div>
+    <div class="modal-overlay" id="waitingModal">
+        <div class="modal"><div class="waiting-modal"><div class="confirm-modal-icon">⏳</div><h2 class="modal-title">Aguardando</h2><p class="confirm-modal-text">Jogadores que não responderam:</p><div class="waiting-list" id="waitingPlayersList"></div><div class="modal-actions"><button class="btn-modal btn-cancel" onclick="closeWaitingModal()">Esperar</button><button class="btn-modal btn-save" onclick="forceNextQuestion()">Continuar ➡️</button></div></div></div>
+    </div>
+    <div class="animation-overlay" id="animationOverlay"><div class="animation-container" id="animationContainer"></div></div>
+    <div class="confetti-container" id="confettiContainer"></div>
+    <canvas id="shareCanvas" width="1200" height="630"></canvas>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, set, get, push, remove, onValue, update } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject, listAll } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWAF9DYI8IFuKSG2tMhFYhDtXcyQI_QoQ",
+            authDomain: "quiz-dos-veloso.firebaseapp.com",
+            databaseURL: "https://quiz-dos-veloso-default-rtdb.firebaseio.com",
+            projectId: "quiz-dos-veloso",
+            storageBucket: "quiz-dos-veloso.firebasestorage.app",
+            messagingSenderId: "374643522848",
+            appId: "1:374643522848:web:221c5f84de4c6bec1a6b45"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const storage = getStorage(app);
+
+        let questions={}, players={}, prizes={}, currentAnswers={};
+        let totalQuestions=10, currentQuestionIndex=0, questionKeys=[];
+        let timerInterval=null, timerRunning=false;
+        const defaultAvatar='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%234ECDC4%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2265%22 font-size=%2250%22 text-anchor=%22middle%22 fill=%22white%22>👤</text></svg>';
+
+        function init(){createStars();generateQRCode();loadQuestions();loadPlayers();loadPrizes();loadLastChampion();listenToAnswers();listenToGameState();initConfig();setupCountButtons();}
+        function createStars(){const c=document.getElementById('starsContainer');const s=['⭐','✨','🌟','💫'];for(let i=0;i<15;i++){const star=document.createElement('div');star.className='star';star.textContent=s[Math.floor(Math.random()*s.length)];star.style.left=Math.random()*100+'%';star.style.top=Math.random()*100+'%';star.style.animationDelay=Math.random()*8+'s';star.style.fontSize=(Math.random()*12+12)+'px';c.appendChild(star);}}
+        function generateQRCode(){const q=document.getElementById('qrcode');q.innerHTML='';const url=window.location.href;const base=url.substring(0,url.lastIndexOf('/')+1);new QRCode(q,{text:base+'mobile-jogador.html',width:180,height:180,colorDark:"#1E1B4B",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});}
+        function setupCountButtons(){document.querySelectorAll('.count-btn').forEach(btn=>{btn.addEventListener('click',function(){document.querySelectorAll('.count-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');totalQuestions=parseInt(this.dataset.count);update(ref(db,'config'),{totalQuestions});updateStartButton();});});}
+        async function initConfig(){const s=await get(ref(db,'config'));if(!s.exists())await set(ref(db,'config'),{totalQuestions:10,currentQuestion:0,gameStarted:false,gameEnded:false,timerActive:false,timerSeconds:10});}
+        function loadQuestions(){onValue(ref(db,'questions'),s=>{questions=s.val()||{};renderQuestionsList();updateStartButton();});}
+        function renderQuestionsList(){const l=document.getElementById('questionsList');const c=document.getElementById('questionsCount');const k=Object.keys(questions);c.textContent=k.length;if(k.length===0){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">📋</div><p>Nenhuma pergunta</p></div>';return;}l.innerHTML=k.map((key,i)=>`<div class="question-item"><div class="question-number">${i+1}</div><div class="question-text">${questions[key].text}</div><div class="question-actions"><button class="btn-edit" onclick="editQuestion('${key}')">✏️</button><button class="btn-delete" onclick="deleteQuestion('${key}')">🗑️</button></div></div>`).join('');}
+        window.openQuestionModal=function(id=null){document.getElementById('questionModal').classList.add('active');document.getElementById('questionForm').reset();document.getElementById('editingQuestionId').value='';document.getElementById('questionImagePreview').classList.remove('visible');document.getElementById('questionUploadPlaceholder').style.display='block';if(id&&questions[id]){const q=questions[id];document.getElementById('editingQuestionId').value=id;document.getElementById('questionText').value=q.text;document.getElementById('optionA').value=q.options[0];document.getElementById('optionB').value=q.options[1];document.getElementById('optionC').value=q.options[2];document.getElementById('optionD').value=q.options[3];document.querySelector(`input[name="correct"][value="${q.correct}"]`).checked=true;if(q.image){document.getElementById('questionImagePreview').src=q.image;document.getElementById('questionImagePreview').classList.add('visible');document.getElementById('questionUploadPlaceholder').style.display='none';}}};
+        window.closeQuestionModal=()=>document.getElementById('questionModal').classList.remove('active');
+        window.editQuestion=id=>openQuestionModal(id);
+        window.deleteQuestion=async function(id){if(confirm('Excluir?')){if(questions[id]?.image)try{await deleteObject(storageRef(storage,`questions/${id}`));}catch(e){}await remove(ref(db,`questions/${id}`));}};
+        window.previewQuestionImage=function(input){if(input.files&&input.files[0]){const r=new FileReader();r.onload=e=>{document.getElementById('questionImagePreview').src=e.target.result;document.getElementById('questionImagePreview').classList.add('visible');document.getElementById('questionUploadPlaceholder').style.display='none';};r.readAsDataURL(input.files[0]);}};
+        document.getElementById('questionForm').addEventListener('submit',async function(e){e.preventDefault();const id=document.getElementById('editingQuestionId').value||push(ref(db,'questions')).key;const file=document.getElementById('questionImage').files[0];let url=questions[id]?.image||'';if(file){const r=storageRef(storage,`questions/${id}`);await uploadBytes(r,file);url=await getDownloadURL(r);}await set(ref(db,`questions/${id}`),{text:document.getElementById('questionText').value,options:[document.getElementById('optionA').value,document.getElementById('optionB').value,document.getElementById('optionC').value,document.getElementById('optionD').value],correct:parseInt(document.querySelector('input[name="correct"]:checked').value),image:url});closeQuestionModal();});
+        function loadPrizes(){onValue(ref(db,'prizes'),s=>{prizes=s.val()||{};renderPrizesList();});}
+        function renderPrizesList(){const l=document.getElementById('prizesList');const k=Object.keys(prizes);if(k.length===0){l.innerHTML='<div class="empty-state"><div class="empty-state-icon">🎁</div><p>Nenhum prêmio</p></div>';return;}const sorted=k.sort((a,b)=>prizes[a].position-prizes[b].position);const cls=['','gold','silver','bronze'];l.innerHTML=sorted.map(key=>{const p=prizes[key];return`<div class="prize-item"><div class="prize-position ${cls[p.position]}">${p.position}º</div>${p.image?`<img class="prize-image" src="${p.image}">`:''}
+<div class="prize-name">${p.name}</div><div class="prize-actions"><button class="btn-edit" onclick="editPrize('${key}')">✏️</button><button class="btn-delete" onclick="deletePrize('${key}')">🗑️</button></div></div>`;}).join('');}
+        window.openPrizeModal=function(id=null){document.getElementById('prizeModal').classList.add('active');document.getElementById('prizeForm').reset();document.getElementById('editingPrizeId').value='';document.getElementById('prizeImagePreview').classList.remove('visible');document.getElementById('prizeUploadPlaceholder').style.display='block';if(id&&prizes[id]){const p=prizes[id];document.getElementById('editingPrizeId').value=id;document.getElementById('prizePosition').value=p.position;document.getElementById('prizeName').value=p.name;if(p.image){document.getElementById('prizeImagePreview').src=p.image;document.getElementById('prizeImagePreview').classList.add('visible');document.getElementById('prizeUploadPlaceholder').style.display='none';}}};
+        window.closePrizeModal=()=>document.getElementById('prizeModal').classList.remove('active');
+        window.editPrize=id=>openPrizeModal(id);
+        window.deletePrize=async function(id){if(confirm('Excluir?')){if(prizes[id]?.image)try{await deleteObject(storageRef(storage,`prizes/${id}`));}catch(e){}await remove(ref(db,`prizes/${id}`));}};
+        window.previewPrizeImage=function(input){if(input.files&&input.files[0]){const r=new FileReader();r.onload=e=>{document.getElementById('prizeImagePreview').src=e.target.result;document.getElementById('prizeImagePreview').classList.add('visible');document.getElementById('prizeUploadPlaceholder').style.display='none';};r.readAsDataURL(input.files[0]);}};
+        document.getElementById('prizeForm').addEventListener('submit',async function(e){e.preventDefault();const id=document.getElementById('editingPrizeId').value||push(ref(db,'prizes')).key;const file=document.getElementById('prizeImage').files[0];let url=prizes[id]?.image||'';if(file){const r=storageRef(storage,`prizes/${id}`);await uploadBytes(r,file);url=await getDownloadURL(r);}await set(ref(db,`prizes/${id}`),{position:parseInt(document.getElementById('prizePosition').value),name:document.getElementById('prizeName').value,image:url});closePrizeModal();});
+        function loadPlayers(){onValue(ref(db,'players'),s=>{players=s.val()||{};renderPlayersGrid();renderGamePlayersList();updateStartButton();});}
+        function renderPlayersGrid(){const g=document.getElementById('playersGrid');const c=document.getElementById('playerCountNumber');const k=Object.keys(players);c.textContent=k.length;if(k.length===0){g.innerHTML='<div class="empty-state"><div class="empty-state-icon">🎮</div><p>Aguardando...</p></div>';return;}g.innerHTML=k.map(key=>`<div class="player-card"><button class="btn-remove-player" onclick="removePlayer('${key}')">✕</button><img class="player-avatar" src="${players[key].photo||defaultAvatar}"><div class="player-name">${players[key].name}</div></div>`).join('');}
+        window.removePlayer=async function(id){if(confirm(`Remover ${players[id]?.name}?`)){if(players[id]?.photo?.includes('firebase'))try{await deleteObject(storageRef(storage,`players/${id}`));}catch(e){}await remove(ref(db,`players/${id}`));}};
+        function renderGamePlayersList(){const l=document.getElementById('gamePlayersList');const k=Object.keys(players);l.innerHTML=k.map(key=>`<div class="game-player-item" id="player-${key}"><img class="game-player-avatar" src="${players[key].photo||defaultAvatar}"><div class="game-player-info"><div class="game-player-name">${players[key].name}</div><div class="game-player-status">Aguardando...</div></div><div class="status-indicator" id="status-${key}"></div></div>`).join('');}
+        function listenToAnswers(){onValue(ref(db,'currentAnswers'),s=>{currentAnswers=s.val()||{};updatePlayerStatuses();});}
+        function updatePlayerStatuses(){Object.keys(players).forEach(id=>{const st=document.getElementById(`status-${id}`);const pi=document.getElementById(`player-${id}`);if(st&&pi){if(currentAnswers[id]!==undefined){st.classList.add('answered');pi.querySelector('.game-player-status').textContent='Respondeu! ✓';}else{st.classList.remove('answered');pi.querySelector('.game-player-status').textContent='Aguardando...';}}});}
+        function updateStartButton(){const btn=document.getElementById('btnStartGame');const qc=Object.keys(questions).length;const pc=Object.keys(players).length;btn.disabled=qc===0||pc===0;if(qc===0)btn.textContent='📝 Adicione perguntas';else if(pc===0)btn.textContent='👥 Aguardando jogadores...';else btn.textContent=`🚀 INICIAR (${pc} jogadores)`;}
+        function loadLastChampion(){onValue(ref(db,'lastChampion'),s=>{const ch=s.val();const el=document.getElementById('lastChampion');if(ch){document.getElementById('lastChampionAvatar').src=ch.photo||defaultAvatar;document.getElementById('lastChampionName').textContent=ch.name;el.classList.add('visible');}else{el.classList.remove('visible');}});}
+        function listenToGameState(){onValue(ref(db,'config'),s=>{const cfg=s.val()||{};if(cfg.gameEnded&&document.getElementById('gameScreen').classList.contains('active')){questionKeys=cfg.questionOrder||[];showFinalAnimation();}});}
+        window.startGame=async function(){const allKeys=Object.keys(questions);questionKeys=shuffleArray([...allKeys]).slice(0,totalQuestions);currentQuestionIndex=0;for(const id of Object.keys(players))await update(ref(db,`players/${id}`),{score:0,answers:[]});await update(ref(db,'config'),{gameStarted:true,gameEnded:false,currentQuestion:0,totalQuestions:questionKeys.length,questionOrder:questionKeys,timerActive:false});await set(ref(db,'currentAnswers'),null);await showIntroAnimation();showScreen('gameScreen');displayCurrentQuestion();};
+        function shuffleArray(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+        async function showIntroAnimation(){const ov=document.getElementById('animationOverlay');const ct=document.getElementById('animationContainer');const type=Math.floor(Math.random()*4);ov.classList.add('active');const pk=Object.keys(players);const prk=Object.keys(prizes).sort((a,b)=>prizes[a].position-prizes[b].position);let html='';switch(type){case 0:html=createCircularAnimation(pk,prk);break;case 1:html=createGridAnimation(pk,prk);break;case 2:html=createWaveAnimation(pk,prk);break;case 3:html=createZoomAnimation(pk,prk);break;}ct.innerHTML=html;await new Promise(r=>setTimeout(r,10000));ov.classList.remove('active');ct.innerHTML='';}
+        function createCircularAnimation(pk,prk){const cx=50,cy=42,rad=28;let h=`<h1 class="intro-title">🎮 QUIZ DOS VELOSO 🎮</h1>`;pk.forEach((k,i)=>{const ang=(i/pk.length)*2*Math.PI;const x=cx+rad*Math.cos(ang);const y=cy+rad*Math.sin(ang);const d=i*0.1;const sz=55+Math.random()*15;h+=`<img class="floating-avatar" src="${players[k].photo||defaultAvatar}" style="width:${sz}px;height:${sz}px;left:${x}%;top:${y}%;animation:orbit${i} 8s linear infinite;animation-delay:${d}s;">`;});h+=`<style>${pk.map((_,i)=>`@keyframes orbit${i}{0%{transform:rotate(0) translateX(18px) rotate(0);}100%{transform:rotate(360deg) translateX(18px) rotate(-360deg);}}`).join('')}</style>`;h+=createPrizeShowcase(prk);return h;}
+        function createGridAnimation(pk,prk){let h=`<h1 class="intro-title">🎮 QUIZ DOS VELOSO 🎮</h1>`;const cols=Math.ceil(Math.sqrt(pk.length));pk.forEach((k,i)=>{const row=Math.floor(i/cols);const col=i%cols;const x=12+(col/cols)*76;const y=18+(row/Math.ceil(pk.length/cols))*48;const d=i*0.12;h+=`<img class="floating-avatar" src="${players[k].photo||defaultAvatar}" style="width:60px;height:60px;left:${x}%;top:${y}%;animation:gridB 1s ease-in-out infinite;animation-delay:${d}s;">`;});h+=`<style>@keyframes gridB{0%,100%{transform:scale(1) rotate(0);}50%{transform:scale(1.15) rotate(8deg);}}</style>`;h+=createPrizeShowcase(prk);return h;}
+        function createWaveAnimation(pk,prk){let h=`<h1 class="intro-title">🎮 QUIZ DOS VELOSO 🎮</h1>`;pk.forEach((k,i)=>{const x=5+(i/pk.length)*90;const d=i*0.18;h+=`<img class="floating-avatar" src="${players[k].photo||defaultAvatar}" style="width:55px;height:55px;left:${x}%;top:38%;animation:waveM 2s ease-in-out infinite;animation-delay:${d}s;">`;});h+=`<style>@keyframes waveM{0%,100%{transform:translateY(0) rotate(-5deg);}50%{transform:translateY(-70px) rotate(5deg);}}</style>`;h+=createPrizeShowcase(prk);return h;}
+        function createZoomAnimation(pk,prk){let h=`<h1 class="intro-title">🎮 QUIZ DOS VELOSO 🎮</h1>`;pk.forEach((k,i)=>{const x=8+Math.random()*84;const y=18+Math.random()*48;const d=i*0.25;const dur=2+Math.random()*2;h+=`<img class="floating-avatar" src="${players[k].photo||defaultAvatar}" style="width:55px;height:55px;left:${x}%;top:${y}%;animation:zoomP ${dur}s ease-in-out infinite;animation-delay:${d}s;">`;});h+=`<style>@keyframes zoomP{0%,100%{transform:scale(0.5);opacity:0.5;}50%{transform:scale(1.4);opacity:1;}}</style>`;h+=createPrizeShowcase(prk);return h;}
+        function createPrizeShowcase(prk){if(prk.length===0)return'';const em=['🥇','🥈','🥉'];return`<div class="prize-showcase"><div class="prize-showcase-title">🎁 PRÊMIOS 🎁</div><div class="prize-showcase-items">${prk.slice(0,3).map((k,i)=>`<div class="prize-showcase-item"><div style="font-size:1.8rem;margin-bottom:4px;">${em[i]}</div>${prizes[k].image?`<img class="prize-showcase-image" src="${prizes[k].image}">`:'<div style="width:80px;height:80px;background:rgba(255,255,255,0.1);border-radius:10px;margin-bottom:8px;"></div>'}<div class="prize-showcase-name">${prizes[k].name}</div></div>`).join('')}</div></div>`;}
+        function displayCurrentQuestion(){if(currentQuestionIndex>=questionKeys.length){endGame();return;}const qk=questionKeys[currentQuestionIndex];const q=questions[qk];document.getElementById('questionCounter').textContent=`Pergunta ${currentQuestionIndex+1} de ${questionKeys.length}`;document.getElementById('progressBar').style.width=`${((currentQuestionIndex+1)/questionKeys.length)*100}%`;document.getElementById('currentQuestionText').textContent=q.text;const img=document.getElementById('currentQuestionImage');if(q.image){img.src=q.image;img.classList.add('visible');}else{img.classList.remove('visible');}document.getElementById('timerContainer').classList.remove('active');document.getElementById('btnTimer').disabled=false;timerRunning=false;if(timerInterval)clearInterval(timerInterval);update(ref(db,'config'),{currentQuestion:currentQuestionIndex,currentQuestionKey:qk,timerActive:false,timerSeconds:10});set(ref(db,'currentAnswers'),null);renderGamePlayersList();}
+        window.startTimer=function(){if(timerRunning)return;timerRunning=true;document.getElementById('btnTimer').disabled=true;document.getElementById('timerContainer').classList.add('active');let sec=10;document.getElementById('timerNumber').textContent=sec;updateTimerCircle(sec,10);update(ref(db,'config'),{timerActive:true,timerSeconds:sec});timerInterval=setInterval(()=>{sec--;document.getElementById('timerNumber').textContent=sec;updateTimerCircle(sec,10);update(ref(db,'config'),{timerSeconds:sec});if(sec<=0){clearInterval(timerInterval);timerRunning=false;update(ref(db,'config'),{timerActive:false});}},1000);};
+        function updateTimerCircle(cur,tot){const deg=(cur/tot)*360;document.getElementById('timerCircle').style.background=`conic-gradient(var(--primary) ${deg}deg, rgba(255,255,255,0.1) ${deg}deg)`;}
+        window.nextQuestion=function(){if(timerInterval)clearInterval(timerInterval);timerRunning=false;const tp=Object.keys(players).length;const ans=Object.keys(currentAnswers).length;if(ans<tp){showWaitingModal();return;}proceedToNextQuestion();};
+        function showWaitingModal(){const l=document.getElementById('waitingPlayersList');const w=Object.keys(players).filter(id=>currentAnswers[id]===undefined);l.innerHTML=w.map(id=>`<div class="waiting-player"><img src="${players[id].photo||defaultAvatar}"><span>${players[id].name}</span></div>`).join('');document.getElementById('waitingModal').classList.add('active');}
+        window.closeWaitingModal=()=>document.getElementById('waitingModal').classList.remove('active');
+        window.forceNextQuestion=function(){closeWaitingModal();proceedToNextQuestion();};
+        function proceedToNextQuestion(){currentQuestionIndex++;if(currentQuestionIndex>=questionKeys.length)endGame();else displayCurrentQuestion();}
+        async function endGame(){await update(ref(db,'config'),{gameStarted:false,gameEnded:true});showFinalAnimation();}
+        async function showFinalAnimation(){const ov=document.getElementById('animationOverlay');const ct=document.getElementById('animationContainer');ov.classList.add('active');const sorted=Object.entries(players).map(([id,p])=>({id,name:p.name,photo:p.photo,score:p.score||0})).sort((a,b)=>b.score-a.score);const winner=sorted[0];ct.innerHTML=`<div class="final-shuffle-container"><div class="shuffle-title">🎲 QUEM SERÁ O CAMPEÃO? 🎲</div><div class="shuffle-avatars" id="shuffleAvatars">${sorted.map(p=>`<img class="shuffle-avatar" src="${p.photo||defaultAvatar}">`).join('')}</div><div class="winner-reveal" id="winnerReveal"><div class="winner-crown">👑</div><img class="winner-avatar" src="${winner.photo||defaultAvatar}"><div class="winner-name">${winner.name}</div><div class="winner-score">${winner.score} acertos!</div></div></div>`;await new Promise(r=>setTimeout(r,5000));document.getElementById('shuffleAvatars').style.display='none';document.getElementById('winnerReveal').classList.add('active');createConfetti();await set(ref(db,'lastChampion'),{name:winner.name,photo:winner.photo||''});await new Promise(r=>setTimeout(r,5000));ov.classList.remove('active');ct.innerHTML='';showScreen('resultsScreen');showResults(sorted);}
+        function showResults(sorted){const max=questionKeys.length;const top3=sorted.slice(0,3);const order=[top3[1],top3[0],top3[2]].filter(Boolean);const prizeByPos={};Object.values(prizes).forEach(p=>{prizeByPos[p.position]=p;});document.getElementById('podiumContainer').innerHTML=order.map((p,i)=>{const pos=i===0?2:i===1?1:3;const prize=prizeByPos[pos];return`<div class="podium-place">${pos===1?'<div class="podium-crown">👑</div>':''}<img class="podium-avatar" src="${p?.photo||defaultAvatar}"><div class="podium-name">${p?.name||'-'}</div><div class="podium-score">${p?.score||0} acertos</div>${prize?`<div class="podium-prize">${prize.name}</div>${prize.image?`<img class="podium-prize-image" src="${prize.image}">`:''}`:''}<div class="podium-stand">${pos}º</div></div>`;}).join('');document.getElementById('rankingTableBody').innerHTML=sorted.map((p,i)=>{const cls=i===0?'gold':i===1?'silver':i===2?'bronze':'';const pct=max>0?Math.round((p.score/max)*100):0;return`<tr><td><span class="ranking-position ${cls}">${i+1}º</span></td><td><div class="ranking-player"><img class="ranking-avatar" src="${p.photo||defaultAvatar}"><span>${p.name}</span></div></td><td>${p.score}/${max}</td><td>${pct}%</td></tr>`;}).join('');createConfetti();}
+        window.shareResults=async function(){const canvas=document.getElementById('shareCanvas');const ctx=canvas.getContext('2d');const grad=ctx.createLinearGradient(0,0,canvas.width,canvas.height);grad.addColorStop(0,'#1E1B4B');grad.addColorStop(1,'#0F0D24');ctx.fillStyle=grad;ctx.fillRect(0,0,canvas.width,canvas.height);ctx.font='bold 55px Fredoka One,sans-serif';ctx.fillStyle='#FFE66D';ctx.textAlign='center';ctx.fillText('🏆 QUIZ DOS VELOSO 🏆',canvas.width/2,75);const sorted=Object.entries(players).map(([id,p])=>({name:p.name,photo:p.photo,score:p.score||0})).sort((a,b)=>b.score-a.score).slice(0,3);const positions=[{x:600,y:180,label:'🥇 1º LUGAR',player:sorted[0]},{x:300,y:260,label:'🥈 2º LUGAR',player:sorted[1]},{x:900,y:260,label:'🥉 3º LUGAR',player:sorted[2]}];positions.forEach(pos=>{if(pos.player){ctx.font='bold 22px Nunito,sans-serif';ctx.fillStyle='#FFE66D';ctx.fillText(pos.label,pos.x,pos.y);ctx.font='bold 32px Fredoka One,sans-serif';ctx.fillStyle='#FFFFFF';ctx.fillText(pos.player.name,pos.x,pos.y+45);ctx.font='26px Nunito,sans-serif';ctx.fillStyle='#4ECDC4';ctx.fillText(`${pos.player.score} acertos`,pos.x,pos.y+85);}});ctx.font='18px Nunito,sans-serif';ctx.fillStyle='rgba(255,255,255,0.5)';ctx.fillText('Feito com ❤️ pela família Veloso',canvas.width/2,canvas.height-25);canvas.toBlob(async blob=>{const file=new File([blob],'quiz-veloso.png',{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({title:'Quiz dos Veloso',text:`🏆 ${sorted[0]?.name} venceu!`,files:[file]});}catch(e){downloadImage(blob);}}else{downloadImage(blob);}},'image/png');};
+        function downloadImage(blob){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='quiz-veloso.png';a.click();URL.revokeObjectURL(url);}
+        window.newGame=async function(){await update(ref(db,'config'),{gameStarted:false,gameEnded:false,currentQuestion:0,timerActive:false});await set(ref(db,'currentAnswers'),null);for(const id of Object.keys(players))await update(ref(db,`players/${id}`),{score:0,answers:[]});currentQuestionIndex=0;showScreen('setupScreen');};
+        window.openResetModal=()=>{document.getElementById('resetModal').classList.add('active');document.getElementById('confirmResetInput').value='';};
+        window.closeResetModal=()=>document.getElementById('resetModal').classList.remove('active');
+        window.confirmReset=async function(){if(document.getElementById('confirmResetInput').value!=='CONFIRMAR'){alert('Digite CONFIRMAR');return;}try{for(const f of['questions','players','prizes'])try{const fr=storageRef(storage,f);const files=await listAll(fr);for(const file of files.items)await deleteObject(file);}catch(e){}await set(ref(db),{config:{totalQuestions:10,currentQuestion:0,gameStarted:false,gameEnded:false,timerActive:false,timerSeconds:10}});closeResetModal();showScreen('setupScreen');alert('Reset completo!');}catch(e){alert('Erro: '+e.message);}};
+        function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+        function createConfetti(){const c=document.getElementById('confettiContainer');c.innerHTML='';const colors=['#FF6B6B','#4ECDC4','#FFE66D','#A855F7','#3B82F6','#22C55E','#F97316','#EC4899'];const shapes=['■','●','▲','★','♦'];for(let i=0;i<80;i++){const cf=document.createElement('div');cf.className='confetti';cf.textContent=shapes[Math.floor(Math.random()*shapes.length)];cf.style.left=Math.random()*100+'%';cf.style.color=colors[Math.floor(Math.random()*colors.length)];cf.style.fontSize=(Math.random()*18+8)+'px';cf.style.animationDelay=Math.random()*3+'s';cf.style.animationDuration=(Math.random()*2+3)+'s';c.appendChild(cf);}setTimeout(()=>{c.innerHTML='';},6000);}
+        document.addEventListener('DOMContentLoaded',init);
+    </script>
+</body>
+</html>
