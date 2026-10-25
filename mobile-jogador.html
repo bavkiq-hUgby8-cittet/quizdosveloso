@@ -2,835 +2,96 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0F0D24">
+    <meta name="description" content="Entre no Quiz dos Veloso pelo celular.">
     <title>QUIZ DOS VELOSO - Jogar</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #FF6B6B;
-            --secondary: #4ECDC4;
-            --accent: #FFE66D;
-            --purple: #A855F7;
-            --blue: #3B82F6;
-            --green: #22C55E;
-            --orange: #F97316;
-            --pink: #EC4899;
-            --dark: #1E1B4B;
-            --darker: #0F0D24;
-            --light: #F8FAFC;
-            --gradient-mario: linear-gradient(135deg, #FF6B6B 0%, #FFE66D 50%, #4ECDC4 100%);
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body {
-            font-family: 'Nunito', sans-serif;
-            background: var(--darker);
-            min-height: 100vh;
-            min-height: -webkit-fill-available;
-            color: var(--light);
-            overflow-x: hidden;
-        }
-        html { height: -webkit-fill-available; }
-        .bg-animation {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; background: var(--darker);
-        }
-        .bg-animation::before {
-            content: ''; position: absolute; top: -50%; left: -50%;
-            width: 200%; height: 200%;
-            background: radial-gradient(circle at 30% 70%, rgba(78,205,196,0.15) 0%, transparent 50%),
-                        radial-gradient(circle at 70% 30%, rgba(255,107,107,0.15) 0%, transparent 50%);
-            animation: bgPulse 15s ease-in-out infinite;
-        }
-        @keyframes bgPulse { 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(-5%,-5%) scale(1.1);} }
-        .container {
-            max-width: 500px; margin: 0 auto; padding: 20px;
-            min-height: 100vh; min-height: -webkit-fill-available;
-            display: flex; flex-direction: column;
-        }
-        .screen { display: none; flex: 1; flex-direction: column; animation: fadeIn 0.4s ease; }
-        .screen.active { display: flex; }
-        @keyframes fadeIn { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
-        .logo { font-family: 'Fredoka One', cursive; font-size: 2rem; text-align: center; margin-bottom: 25px; background: var(--gradient-mario); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .card {
-            background: linear-gradient(145deg, rgba(30,27,75,0.95), rgba(15,13,36,0.95));
-            border-radius: 24px; padding: 25px; border: 2px solid rgba(255,255,255,0.1);
-            margin-bottom: 20px;
-        }
-        .card-title { font-family: 'Fredoka One', cursive; font-size: 1.3rem; margin-bottom: 20px; text-align: center; color: var(--accent); }
-        .form-group { margin-bottom: 20px; }
-        .form-label { display: block; margin-bottom: 8px; font-weight: 700; font-size: 0.95rem; }
-        .form-input {
-            width: 100%; padding: 16px; border: 2px solid rgba(255,255,255,0.15);
-            border-radius: 14px; background: rgba(255,255,255,0.08); color: var(--light);
-            font-size: 1.1rem; transition: all 0.3s;
-        }
-        .form-input:focus { outline: none; border-color: var(--secondary); background: rgba(255,255,255,0.12); }
-        .form-input::placeholder { color: rgba(255,255,255,0.4); }
-        .photo-section { text-align: center; }
-        .photo-preview-container {
-            width: 140px; height: 140px; margin: 0 auto 20px; position: relative;
-            border-radius: 50%; border: 4px solid var(--accent);
-            background: rgba(255,255,255,0.08); overflow: hidden;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .photo-preview { width: 100%; height: 100%; object-fit: cover; display: none; }
-        .photo-preview.visible { display: block; }
-        .photo-placeholder { font-size: 4rem; }
-        .photo-buttons { display: flex; gap: 12px; justify-content: center; }
-        .btn-photo {
-            flex: 1; padding: 14px; border: none; border-radius: 14px;
-            font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.3s;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-        }
-        .btn-camera { background: linear-gradient(135deg, var(--purple), var(--pink)); color: white; }
-        .btn-gallery { background: linear-gradient(135deg, var(--blue), var(--secondary)); color: white; }
-        .btn-photo:active { transform: scale(0.95); }
-        .btn-primary {
-            width: 100%; padding: 18px; border: none; border-radius: 18px;
-            font-family: 'Fredoka One', cursive; font-size: 1.3rem; cursor: pointer;
-            transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px;
-            background: linear-gradient(135deg, var(--green), #10B981); color: white;
-            box-shadow: 0 8px 30px rgba(34,197,94,0.4);
-        }
-        .btn-primary:active { transform: scale(0.97); }
-        .btn-primary:disabled { background: #444; cursor: not-allowed; box-shadow: none; }
-        .waiting-screen { align-items: center; justify-content: center; text-align: center; }
-        .waiting-avatar { width: 120px; height: 120px; border-radius: 50%; border: 4px solid var(--accent); object-fit: cover; margin-bottom: 20px; animation: avatarPulse 2s ease-in-out infinite; }
-        @keyframes avatarPulse { 0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,230,109,0.4);} 50%{transform:scale(1.05);box-shadow:0 0 0 15px rgba(255,230,109,0);} }
-        .waiting-name { font-family: 'Fredoka One', cursive; font-size: 1.8rem; margin-bottom: 10px; }
-        .waiting-text { font-size: 1.1rem; color: rgba(255,255,255,0.7); margin-bottom: 25px; }
-        .waiting-dots { display: flex; gap: 8px; justify-content: center; }
-        .waiting-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--accent); animation: dotBounce 1.4s ease-in-out infinite; }
-        .waiting-dot:nth-child(2) { animation-delay: 0.2s; }
-        .waiting-dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes dotBounce { 0%,80%,100%{transform:scale(0.6);opacity:0.5;} 40%{transform:scale(1);opacity:1;} }
-        .player-counter { margin-top: 30px; padding: 15px 25px; background: rgba(78,205,196,0.2); border-radius: 15px; }
-        .player-counter-number { font-family: 'Fredoka One', cursive; font-size: 2.5rem; color: var(--secondary); }
-        .player-counter-label { font-size: 0.9rem; opacity: 0.8; }
-        .game-screen { padding-top: 10px; }
-        .question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .question-counter { font-family: 'Fredoka One', cursive; font-size: 1.1rem; color: var(--accent); }
-        .question-score { font-weight: 700; color: var(--secondary); font-size: 1rem; }
-        .progress-bar-container { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
-        .progress-bar { height: 100%; background: var(--gradient-mario); border-radius: 10px; transition: width 0.5s ease; }
-        .question-card {
-            background: linear-gradient(145deg, rgba(30,27,75,0.95), rgba(15,13,36,0.95));
-            border-radius: 24px; padding: 25px; border: 2px solid rgba(255,255,255,0.1);
-            margin-bottom: 20px; text-align: center;
-        }
-        .question-image { max-width: 100%; max-height: 200px; border-radius: 16px; margin-bottom: 20px; display: none; }
-        .question-image.visible { display: block; margin: 0 auto 20px; }
-        .question-text { font-family: 'Fredoka One', cursive; font-size: 1.4rem; line-height: 1.4; }
-        .timer-display { margin: 20px 0; display: none; }
-        .timer-display.active { display: block; }
-        .timer-bar-container { width: 100%; height: 12px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
-        .timer-bar { height: 100%; background: linear-gradient(90deg, var(--primary), var(--orange)); border-radius: 10px; transition: width 0.3s linear; }
-        .timer-bar.urgent { background: linear-gradient(90deg, #DC2626, var(--primary)); animation: timerUrgent 0.3s ease-in-out infinite; }
-        @keyframes timerUrgent { 0%,100%{opacity:1;} 50%{opacity:0.7;} }
-        .timer-text { text-align: center; font-family: 'Fredoka One', cursive; font-size: 1.5rem; color: var(--primary); }
-        .timer-text.urgent { animation: timerTextPulse 0.5s ease-in-out infinite; }
-        @keyframes timerTextPulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.1);} }
-        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .option-btn {
-            padding: 20px 15px; border: 3px solid rgba(255,255,255,0.2);
-            border-radius: 18px; background: rgba(255,255,255,0.08);
-            color: var(--light); font-weight: 700; font-size: 1rem;
-            cursor: pointer; transition: all 0.3s; display: flex;
-            flex-direction: column; align-items: center; gap: 8px;
-            min-height: 100px;
-        }
-        .option-btn:active { transform: scale(0.95); }
-        .option-btn.selected { border-color: var(--accent); background: rgba(255,230,109,0.2); transform: scale(1.02); }
-        .option-btn.correct { border-color: var(--green); background: rgba(34,197,94,0.3); }
-        .option-btn.incorrect { border-color: var(--primary); background: rgba(255,107,107,0.3); }
-        .option-btn.disabled { pointer-events: none; opacity: 0.6; }
-        .option-letter {
-            width: 40px; height: 40px; border-radius: 12px;
-            background: linear-gradient(135deg, var(--purple), var(--pink));
-            display: flex; align-items: center; justify-content: center;
-            font-family: 'Fredoka One', cursive; font-size: 1.3rem;
-        }
-        .option-btn:nth-child(1) .option-letter { background: linear-gradient(135deg, #FF6B6B, #FF8E8E); }
-        .option-btn:nth-child(2) .option-letter { background: linear-gradient(135deg, #4ECDC4, #6EE7DF); }
-        .option-btn:nth-child(3) .option-letter { background: linear-gradient(135deg, #FFE66D, #FFF09D); color: var(--dark); }
-        .option-btn:nth-child(4) .option-letter { background: linear-gradient(135deg, #A855F7, #C084FC); }
-        .option-text { font-size: 0.95rem; text-align: center; word-break: break-word; }
-        .feedback-message {
-            text-align: center; padding: 20px; border-radius: 18px;
-            margin-top: 20px; animation: feedbackPop 0.4s ease;
-        }
-        @keyframes feedbackPop { from{transform:scale(0.8);opacity:0;} to{transform:scale(1);opacity:1;} }
-        .feedback-message.correct { background: rgba(34,197,94,0.2); border: 2px solid var(--green); }
-        .feedback-message.incorrect { background: rgba(255,107,107,0.2); border: 2px solid var(--primary); }
-        .feedback-message.waiting { background: rgba(255,230,109,0.2); border: 2px solid var(--accent); }
-        .feedback-icon { font-size: 2.5rem; margin-bottom: 10px; }
-        .feedback-text { font-family: 'Fredoka One', cursive; font-size: 1.2rem; }
-        .results-screen { align-items: center; justify-content: center; text-align: center; padding: 20px; }
-        .results-badge {
-            width: 140px; height: 140px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 4rem; margin-bottom: 20px; animation: badgePop 0.6s ease;
-        }
-        @keyframes badgePop { from{transform:scale(0) rotate(-180deg);} to{transform:scale(1) rotate(0);} }
-        .results-badge.gold { background: linear-gradient(135deg, #FFD700, #FFA500); box-shadow: 0 0 40px rgba(255,215,0,0.5); }
-        .results-badge.silver { background: linear-gradient(135deg, #C0C0C0, #A0A0A0); box-shadow: 0 0 40px rgba(192,192,192,0.5); }
-        .results-badge.bronze { background: linear-gradient(135deg, #CD7F32, #B87333); box-shadow: 0 0 40px rgba(205,127,50,0.5); }
-        .results-badge.participant { background: linear-gradient(135deg, var(--purple), var(--pink)); box-shadow: 0 0 40px rgba(168,85,247,0.5); }
-        .results-position { font-family: 'Fredoka One', cursive; font-size: 2.5rem; margin-bottom: 10px; }
-        .results-position.gold { color: #FFD700; }
-        .results-position.silver { color: #C0C0C0; }
-        .results-position.bronze { color: #CD7F32; }
-        .results-message { font-size: 1.2rem; color: rgba(255,255,255,0.8); margin-bottom: 25px; }
-        .results-stats { display: flex; gap: 30px; justify-content: center; margin-bottom: 30px; }
-        .stat-item { text-align: center; }
-        .stat-value { font-family: 'Fredoka One', cursive; font-size: 2.5rem; color: var(--secondary); }
-        .stat-label { font-size: 0.85rem; opacity: 0.7; }
-        .mini-ranking {
-            background: rgba(255,255,255,0.05); border-radius: 18px;
-            padding: 20px; width: 100%; max-width: 350px;
-        }
-        .mini-ranking-title { font-family: 'Fredoka One', cursive; font-size: 1.1rem; color: var(--accent); margin-bottom: 15px; }
-        .mini-ranking-item {
-            display: flex; align-items: center; gap: 12px;
-            padding: 10px; border-radius: 12px; margin-bottom: 8px;
-            background: rgba(255,255,255,0.05);
-        }
-        .mini-ranking-item.highlight { background: rgba(255,230,109,0.15); border: 2px solid var(--accent); }
-        .mini-ranking-pos { font-family: 'Fredoka One', cursive; font-size: 1.2rem; width: 35px; }
-        .mini-ranking-pos.gold { color: #FFD700; }
-        .mini-ranking-pos.silver { color: #C0C0C0; }
-        .mini-ranking-pos.bronze { color: #CD7F32; }
-        .mini-ranking-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-        .mini-ranking-name { flex: 1; font-weight: 600; font-size: 0.9rem; text-align: left; }
-        .mini-ranking-score { font-weight: 700; color: var(--secondary); }
-        .confetti-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; overflow: hidden; }
-        .confetti { position: absolute; animation: confettiFall 4s linear forwards; }
-        @keyframes confettiFall { 0%{transform:translateY(-100px) rotate(0);opacity:1;} 100%{transform:translateY(100vh) rotate(720deg);opacity:0;} }
-        .animation-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--darker); display: none; align-items: center;
-            justify-content: center; z-index: 500; flex-direction: column;
-        }
-        .animation-overlay.active { display: flex; }
-        .intro-animation { text-align: center; }
-        .intro-title { font-family: 'Fredoka One', cursive; font-size: 2rem; background: var(--gradient-mario); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 30px; animation: introPulse 1s ease-in-out infinite; }
-        @keyframes introPulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
-        .intro-message { font-size: 1.2rem; color: var(--accent); margin-bottom: 20px; }
-        .intro-avatars { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 300px; margin: 0 auto; }
-        .intro-avatar { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover; animation: introAvatarPop 0.5s ease backwards; }
-        @keyframes introAvatarPop { from{transform:scale(0) rotate(-180deg);opacity:0;} to{transform:scale(1) rotate(0);opacity:1;} }
-        .shuffle-animation { text-align: center; }
-        .shuffle-title { font-family: 'Fredoka One', cursive; font-size: 1.8rem; color: var(--accent); margin-bottom: 30px; animation: shufflePulse 0.5s ease-in-out infinite; }
-        @keyframes shufflePulse { 0%,100%{opacity:1;} 50%{opacity:0.6;} }
-        .shuffle-avatar-container { position: relative; width: 120px; height: 120px; margin: 0 auto; }
-        .shuffle-avatar {
-            width: 100%; height: 100%; border-radius: 50%;
-            border: 4px solid var(--accent); object-fit: cover;
-            position: absolute; top: 0; left: 0;
-            animation: shuffleRotate 0.2s linear infinite;
-        }
-        @keyframes shuffleRotate { from{transform:rotate(0) scale(1);} to{transform:rotate(360deg) scale(1);} }
-        .prize-display { margin-top: 30px; }
-        .prize-title { font-size: 1rem; color: var(--accent); margin-bottom: 15px; }
-        .prize-image { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; border: 2px solid gold; }
-        .prize-name { margin-top: 10px; font-weight: 700; font-size: 0.9rem; }
-        @media (max-width: 380px) {
-            .option-btn { padding: 15px 10px; min-height: 90px; }
-            .option-letter { width: 35px; height: 35px; font-size: 1.1rem; }
-            .question-text { font-size: 1.2rem; }
-        }
-    </style>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%AD%90%3C/text%3E%3C/svg%3E">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Fredoka:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/jogador.css">
 </head>
 <body>
-    <div class="bg-animation"></div>
+    <div class="bg-animation" aria-hidden="true"></div>
     <div class="container">
-        <!-- Registration Screen -->
-        <div class="screen active" id="registerScreen">
+        <div class="status-banner" id="statusBanner" role="status"></div>
+        <button type="button" class="btn-ensaio" id="btnEnsaio">Modo ensaio neste computador</button>
+
+        <section class="screen active" id="registerScreen" aria-hidden="false">
             <h1 class="logo">⭐ QUIZ DOS VELOSO ⭐</h1>
             <div class="card">
-                <h2 class="card-title">👋 Entrar no Quiz</h2>
+                <h2 class="card-title">👋 Entrar no quiz</h2>
                 <form id="registerForm">
                     <div class="form-group">
-                        <label class="form-label">Seu Nome</label>
-                        <input type="text" class="form-input" id="playerName" placeholder="Digite seu nome..." required maxlength="20">
+                        <label class="form-label" for="playerName">Seu nome</label>
+                        <input type="text" class="form-input" id="playerName" name="nickname" placeholder="Digite seu nome..." required maxlength="30" autocomplete="nickname" enterkeyhint="done">
                     </div>
                     <div class="form-group photo-section">
-                        <label class="form-label">Sua Foto</label>
+                        <span class="form-label" id="photoLabel">Sua foto (opcional)</span>
                         <div class="photo-preview-container">
-                            <img class="photo-preview" id="photoPreview" src="" alt="">
-                            <span class="photo-placeholder" id="photoPlaceholder">📷</span>
+                            <img class="photo-preview" id="photoPreview" alt="Prévia da sua foto">
+                            <span class="photo-placeholder" id="photoPlaceholder" aria-hidden="true">📷</span>
                         </div>
                         <div class="photo-buttons">
-                            <button type="button" class="btn-photo btn-camera" onclick="openCamera()">
-                                <span>📸</span> Câmera
-                            </button>
-                            <button type="button" class="btn-photo btn-gallery" onclick="openGallery()">
-                                <span>🖼️</span> Galeria
-                            </button>
+                            <button type="button" class="btn-photo btn-camera" id="btnCamera">📸 Câmera</button>
+                            <button type="button" class="btn-photo btn-gallery" id="btnGallery">🖼️ Galeria</button>
                         </div>
-                        <input type="file" id="cameraInput" accept="image/*" capture="user" style="display:none">
-                        <input type="file" id="galleryInput" accept="image/*" style="display:none">
+                        <input type="file" id="cameraInput" accept="image/*" capture="user" hidden aria-labelledby="photoLabel">
+                        <input type="file" id="galleryInput" accept="image/*" hidden aria-labelledby="photoLabel">
                     </div>
-                    <button type="submit" class="btn-primary" id="btnJoin">🎮 ENTRAR NO JOGO</button>
+                    <p class="form-error" id="joinError" role="alert"></p>
+                    <button type="submit" class="btn-primary" id="btnJoin">🎮 Entrar no jogo</button>
                 </form>
             </div>
-        </div>
+        </section>
 
-        <!-- Waiting Screen -->
-        <div class="screen" id="waitingScreen">
+        <section class="screen" id="waitingScreen" aria-hidden="true">
             <div class="waiting-screen">
-                <img class="waiting-avatar" id="waitingAvatar" src="" alt="">
+                <img class="waiting-avatar" id="waitingAvatar" alt="">
                 <h2 class="waiting-name" id="waitingName">Jogador</h2>
-                <p class="waiting-text">Aguardando o jogo começar...</p>
-                <div class="waiting-dots">
-                    <div class="waiting-dot"></div>
-                    <div class="waiting-dot"></div>
-                    <div class="waiting-dot"></div>
-                </div>
+                <p class="waiting-text">Aguardando o jogo começar...<br>Deixe esta página aberta.</p>
+                <div class="waiting-dots" aria-hidden="true"><div class="waiting-dot"></div><div class="waiting-dot"></div><div class="waiting-dot"></div></div>
                 <div class="player-counter">
-                    <div class="player-counter-number" id="waitingPlayerCount">0</div>
+                    <div class="player-counter-number" id="waitingPlayerCount" aria-live="polite">0</div>
                     <div class="player-counter-label">jogadores conectados</div>
                 </div>
+                <button type="button" class="btn-leave" id="btnLeave">Não sou eu / sair</button>
             </div>
-        </div>
+        </section>
 
-        <!-- Game Screen -->
-        <div class="screen" id="gameScreen">
-            <div class="game-screen">
-                <div class="question-header">
-                    <span class="question-counter" id="gameQuestionCounter">Pergunta 1/10</span>
-                    <span class="question-score" id="gameScore">⭐ 0 pontos</span>
-                </div>
-                <div class="progress-bar-container">
-                    <div class="progress-bar" id="gameProgressBar" style="width: 10%"></div>
-                </div>
-                
-                <!-- Timer Display -->
-                <div class="timer-display" id="timerDisplay">
-                    <div class="timer-bar-container">
-                        <div class="timer-bar" id="timerBar" style="width: 100%"></div>
-                    </div>
-                    <div class="timer-text" id="timerText">⏱️ 10</div>
-                </div>
-                
-                <div class="question-card">
-                    <img class="question-image" id="gameQuestionImage" src="" alt="">
-                    <p class="question-text" id="gameQuestionText">Carregando pergunta...</p>
-                </div>
-                <div class="options-grid" id="optionsGrid"></div>
-                <div id="feedbackArea"></div>
+        <section class="screen" id="gameScreen" aria-hidden="true">
+            <div class="question-header">
+                <span class="question-counter" id="gameQuestionCounter">Pergunta 1/10</span>
+                <span class="question-score" id="gameScore">⭐ 0 acertos</span>
             </div>
-        </div>
+            <div class="progress-bar-container" aria-hidden="true"><div class="progress-bar" id="gameProgressBar"></div></div>
+            <div class="timer-display" id="timerDisplay" aria-live="polite">
+                <div class="timer-bar-container"><div class="timer-bar" id="timerBar"></div></div>
+                <div class="timer-text" id="timerText">⏱️ 10</div>
+            </div>
+            <div class="question-card">
+                <img class="question-image" id="gameQuestionImage" alt="">
+                <p class="question-text" id="gameQuestionText">Carregando pergunta...</p>
+            </div>
+            <div class="options-grid" id="optionsGrid"></div>
+            <div id="feedbackArea" aria-live="polite"></div>
+        </section>
 
-        <!-- Results Screen -->
-        <div class="screen" id="resultsScreen">
+        <section class="screen" id="resultsScreen" aria-hidden="true">
             <div class="results-screen">
-                <div class="results-badge" id="resultsBadge">🏆</div>
-                <h2 class="results-position" id="resultsPosition">1º Lugar!</h2>
-                <p class="results-message" id="resultsMessage">Parabéns, você arrasou!</p>
+                <div class="results-badge participant" id="resultsBadge">⭐</div>
+                <h2 class="results-position" id="resultsPosition">Resultado</h2>
+                <p class="results-message" id="resultsMessage"></p>
                 <div class="results-stats">
-                    <div class="stat-item">
-                        <div class="stat-value" id="resultsScore">0</div>
-                        <div class="stat-label">acertos</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="resultsPercent">0%</div>
-                        <div class="stat-label">aproveitamento</div>
-                    </div>
+                    <div class="stat-item"><div class="stat-value" id="resultsScore">0</div><div class="stat-label">acertos</div></div>
+                    <div class="stat-item"><div class="stat-value" id="resultsPercent">0%</div><div class="stat-label">aproveitamento</div></div>
                 </div>
                 <div class="mini-ranking" id="miniRanking"></div>
+                <button type="button" class="btn-leave" id="btnLeaveResults">Sair do jogo</button>
             </div>
-        </div>
+        </section>
     </div>
-
-    <!-- Animation Overlay -->
-    <div class="animation-overlay" id="animationOverlay">
-        <div id="animationContent"></div>
-    </div>
-
-    <!-- Confetti Container -->
-    <div class="confetti-container" id="confettiContainer"></div>
-
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getDatabase, ref, set, get, push, onValue, update } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBWAF9DYI8IFuKSG2tMhFYhDtXcyQI_QoQ",
-            authDomain: "quiz-dos-veloso.firebaseapp.com",
-            databaseURL: "https://quiz-dos-veloso-default-rtdb.firebaseio.com",
-            projectId: "quiz-dos-veloso",
-            storageBucket: "quiz-dos-veloso.firebasestorage.app",
-            messagingSenderId: "374643522848",
-            appId: "1:374643522848:web:221c5f84de4c6bec1a6b45"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const storage = getStorage(app);
-
-        let playerId = localStorage.getItem('quizPlayerId');
-        let playerData = null;
-        let questions = {};
-        let players = {};
-        let prizes = {};
-        let config = {};
-        let currentQuestionKey = null;
-        let hasAnswered = false;
-        let myScore = 0;
-        let timerInterval = null;
-
-        const defaultAvatar = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%234ECDC4%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2265%22 font-size=%2250%22 text-anchor=%22middle%22 fill=%22white%22>👤</text></svg>';
-        let selectedPhotoFile = null;
-
-        function init() {
-            setupPhotoInputs();
-            setupForm();
-            loadQuestions();
-            loadPlayers();
-            loadPrizes();
-            listenToConfig();
-            checkExistingPlayer();
-        }
-
-        function setupPhotoInputs() {
-            document.getElementById('cameraInput').addEventListener('change', handlePhotoSelect);
-            document.getElementById('galleryInput').addEventListener('change', handlePhotoSelect);
-        }
-
-        window.openCamera = () => document.getElementById('cameraInput').click();
-        window.openGallery = () => document.getElementById('galleryInput').click();
-
-        function handlePhotoSelect(e) {
-            const file = e.target.files[0];
-            if (file) {
-                selectedPhotoFile = file;
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    document.getElementById('photoPreview').src = ev.target.result;
-                    document.getElementById('photoPreview').classList.add('visible');
-                    document.getElementById('photoPlaceholder').style.display = 'none';
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function setupForm() {
-            document.getElementById('registerForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const name = document.getElementById('playerName').value.trim();
-                if (!name) return;
-
-                const btn = document.getElementById('btnJoin');
-                btn.disabled = true;
-                btn.textContent = '⏳ Entrando...';
-
-                try {
-                    playerId = push(ref(db, 'players')).key;
-                    let photoUrl = '';
-
-                    if (selectedPhotoFile) {
-                        const imgRef = storageRef(storage, `players/${playerId}`);
-                        await uploadBytes(imgRef, selectedPhotoFile);
-                        photoUrl = await getDownloadURL(imgRef);
-                    }
-
-                    playerData = { name, photo: photoUrl, score: 0, answers: [] };
-                    await set(ref(db, `players/${playerId}`), playerData);
-                    localStorage.setItem('quizPlayerId', playerId);
-
-                    document.getElementById('waitingAvatar').src = photoUrl || defaultAvatar;
-                    document.getElementById('waitingName').textContent = name;
-                    showScreen('waitingScreen');
-                } catch (err) {
-                    alert('Erro ao entrar: ' + err.message);
-                    btn.disabled = false;
-                    btn.textContent = '🎮 ENTRAR NO JOGO';
-                }
-            });
-        }
-
-        async function checkExistingPlayer() {
-            if (playerId) {
-                const snapshot = await get(ref(db, `players/${playerId}`));
-                if (snapshot.exists()) {
-                    playerData = snapshot.val();
-                    document.getElementById('waitingAvatar').src = playerData.photo || defaultAvatar;
-                    document.getElementById('waitingName').textContent = playerData.name;
-                    myScore = playerData.score || 0;
-
-                    if (config.gameStarted && !config.gameEnded) {
-                        showScreen('gameScreen');
-                    } else if (config.gameEnded) {
-                        showResults();
-                    } else {
-                        showScreen('waitingScreen');
-                    }
-                }
-            }
-        }
-
-        function loadQuestions() {
-            onValue(ref(db, 'questions'), (snapshot) => {
-                questions = snapshot.val() || {};
-            });
-        }
-
-        function loadPlayers() {
-            onValue(ref(db, 'players'), (snapshot) => {
-                players = snapshot.val() || {};
-                document.getElementById('waitingPlayerCount').textContent = Object.keys(players).length;
-                if (playerId && players[playerId]) {
-                    playerData = players[playerId];
-                    myScore = playerData.score || 0;
-                    updateScoreDisplay();
-                }
-            });
-        }
-
-        function loadPrizes() {
-            onValue(ref(db, 'prizes'), (snapshot) => {
-                prizes = snapshot.val() || {};
-            });
-        }
-
-        function listenToConfig() {
-            onValue(ref(db, 'config'), (snapshot) => {
-                const prevConfig = { ...config };
-                config = snapshot.val() || {};
-
-                // Game just started
-                if (config.gameStarted && !prevConfig.gameStarted && playerId && players[playerId]) {
-                    showIntroAnimation().then(() => {
-                        showScreen('gameScreen');
-                        displayQuestion();
-                    });
-                }
-
-                // Question changed
-                if (config.currentQuestionKey !== prevConfig.currentQuestionKey && config.gameStarted) {
-                    hasAnswered = false;
-                    currentQuestionKey = config.currentQuestionKey;
-                    displayQuestion();
-                }
-
-                // Timer state
-                if (config.timerActive) {
-                    showTimer(config.timerSeconds);
-                } else {
-                    hideTimer();
-                }
-
-                // Update timer seconds
-                if (config.timerActive && config.timerSeconds !== undefined) {
-                    updateTimerDisplay(config.timerSeconds);
-                }
-
-                // Game ended
-                if (config.gameEnded && !prevConfig.gameEnded) {
-                    showShuffleAnimation().then(() => {
-                        showResults();
-                    });
-                }
-            });
-        }
-
-        async function showIntroAnimation() {
-            const overlay = document.getElementById('animationOverlay');
-            const content = document.getElementById('animationContent');
-            overlay.classList.add('active');
-
-            const playerKeys = Object.keys(players);
-            const prizeKeys = Object.keys(prizes).sort((a, b) => prizes[a].position - prizes[b].position);
-
-            let prizeHtml = '';
-            if (prizeKeys.length > 0) {
-                const firstPrize = prizes[prizeKeys[0]];
-                prizeHtml = `
-                    <div class="prize-display">
-                        <div class="prize-title">🏆 Prêmio do 1º Lugar</div>
-                        ${firstPrize.image ? `<img class="prize-image" src="${firstPrize.image}" alt="">` : ''}
-                        <div class="prize-name">${firstPrize.name}</div>
-                    </div>
-                `;
-            }
-
-            content.innerHTML = `
-                <div class="intro-animation">
-                    <h1 class="intro-title">🎮 QUIZ DOS VELOSO 🎮</h1>
-                    <p class="intro-message">Preparados para jogar?</p>
-                    <div class="intro-avatars">
-                        ${playerKeys.map((k, i) => `
-                            <img class="intro-avatar" src="${players[k].photo || defaultAvatar}" 
-                                style="animation-delay: ${i * 0.1}s" alt="">
-                        `).join('')}
-                    </div>
-                    ${prizeHtml}
-                </div>
-            `;
-
-            await new Promise(resolve => setTimeout(resolve, 5000));
-            overlay.classList.remove('active');
-            content.innerHTML = '';
-        }
-
-        async function showShuffleAnimation() {
-            const overlay = document.getElementById('animationOverlay');
-            const content = document.getElementById('animationContent');
-            overlay.classList.add('active');
-
-            const sorted = Object.entries(players)
-                .map(([id, p]) => ({ id, ...p }))
-                .sort((a, b) => (b.score || 0) - (a.score || 0));
-
-            const avatars = sorted.map(p => p.photo || defaultAvatar);
-            let currentIndex = 0;
-
-            content.innerHTML = `
-                <div class="shuffle-animation">
-                    <h2 class="shuffle-title">🎲 QUEM GANHOU? 🎲</h2>
-                    <div class="shuffle-avatar-container">
-                        <img class="shuffle-avatar" id="shuffleAvatar" src="${avatars[0]}" alt="">
-                    </div>
-                </div>
-            `;
-
-            const shuffleImg = document.getElementById('shuffleAvatar');
-            const shuffleInterval = setInterval(() => {
-                currentIndex = (currentIndex + 1) % avatars.length;
-                shuffleImg.src = avatars[currentIndex];
-            }, 150);
-
-            await new Promise(resolve => setTimeout(resolve, 4000));
-
-            clearInterval(shuffleInterval);
-            shuffleImg.style.animation = 'none';
-            shuffleImg.src = sorted[0].photo || defaultAvatar;
-
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            overlay.classList.remove('active');
-            content.innerHTML = '';
-        }
-
-        function displayQuestion() {
-            if (!config.questionOrder || config.currentQuestion === undefined) return;
-
-            const qKey = config.questionOrder[config.currentQuestion];
-            const q = questions[qKey];
-            if (!q) return;
-
-            currentQuestionKey = qKey;
-            const total = config.questionOrder.length;
-            const current = config.currentQuestion + 1;
-
-            document.getElementById('gameQuestionCounter').textContent = `Pergunta ${current}/${total}`;
-            document.getElementById('gameProgressBar').style.width = `${(current / total) * 100}%`;
-            document.getElementById('gameQuestionText').textContent = q.text;
-
-            const img = document.getElementById('gameQuestionImage');
-            if (q.image) {
-                img.src = q.image;
-                img.classList.add('visible');
-            } else {
-                img.classList.remove('visible');
-            }
-
-            updateScoreDisplay();
-
-            const letters = ['A', 'B', 'C', 'D'];
-            document.getElementById('optionsGrid').innerHTML = q.options.map((opt, i) => `
-                <button class="option-btn" onclick="selectOption(${i})" id="option-${i}">
-                    <div class="option-letter">${letters[i]}</div>
-                    <div class="option-text">${opt}</div>
-                </button>
-            `).join('');
-
-            document.getElementById('feedbackArea').innerHTML = '';
-            hideTimer();
-        }
-
-        function updateScoreDisplay() {
-            document.getElementById('gameScore').textContent = `⭐ ${myScore} pontos`;
-        }
-
-        function showTimer(seconds) {
-            document.getElementById('timerDisplay').classList.add('active');
-            updateTimerDisplay(seconds);
-        }
-
-        function hideTimer() {
-            document.getElementById('timerDisplay').classList.remove('active');
-        }
-
-        function updateTimerDisplay(seconds) {
-            const bar = document.getElementById('timerBar');
-            const text = document.getElementById('timerText');
-            const percent = (seconds / 10) * 100;
-            bar.style.width = `${percent}%`;
-            text.textContent = `⏱️ ${seconds}`;
-
-            if (seconds <= 3) {
-                bar.classList.add('urgent');
-                text.classList.add('urgent');
-            } else {
-                bar.classList.remove('urgent');
-                text.classList.remove('urgent');
-            }
-        }
-
-        window.selectOption = async function(index) {
-            if (hasAnswered || !currentQuestionKey) return;
-            hasAnswered = true;
-
-            // Disable all buttons
-            document.querySelectorAll('.option-btn').forEach(btn => btn.classList.add('disabled'));
-            document.getElementById(`option-${index}`).classList.add('selected');
-
-            // Get correct answer
-            const q = questions[currentQuestionKey];
-            const isCorrect = index === q.correct;
-
-            // Show result
-            setTimeout(() => {
-                document.querySelectorAll('.option-btn').forEach((btn, i) => {
-                    if (i === q.correct) btn.classList.add('correct');
-                    else if (i === index && !isCorrect) btn.classList.add('incorrect');
-                });
-
-                const feedback = document.getElementById('feedbackArea');
-                if (isCorrect) {
-                    myScore++;
-                    feedback.innerHTML = `
-                        <div class="feedback-message correct">
-                            <div class="feedback-icon">🎉</div>
-                            <div class="feedback-text">Correto!</div>
-                        </div>
-                    `;
-                } else {
-                    feedback.innerHTML = `
-                        <div class="feedback-message incorrect">
-                            <div class="feedback-icon">😢</div>
-                            <div class="feedback-text">Errado!</div>
-                        </div>
-                    `;
-                }
-
-                // Update score in database
-                update(ref(db, `players/${playerId}`), {
-                    score: myScore,
-                    answers: [...(playerData.answers || []), index]
-                });
-
-                // Mark as answered
-                set(ref(db, `currentAnswers/${playerId}`), index);
-
-                updateScoreDisplay();
-
-                // Show waiting message
-                setTimeout(() => {
-                    feedback.innerHTML = `
-                        <div class="feedback-message waiting">
-                            <div class="feedback-icon">⏳</div>
-                            <div class="feedback-text">Aguardando próxima...</div>
-                        </div>
-                    `;
-                }, 1500);
-            }, 500);
-        };
-
-        function showResults() {
-            showScreen('resultsScreen');
-
-            const sorted = Object.entries(players)
-                .map(([id, p]) => ({ id, name: p.name, photo: p.photo, score: p.score || 0 }))
-                .sort((a, b) => b.score - a.score);
-
-            const myIndex = sorted.findIndex(p => p.id === playerId);
-            const position = myIndex + 1;
-            const total = config.questionOrder?.length || 10;
-            const percent = Math.round((myScore / total) * 100);
-
-            // Badge and position styling
-            const badge = document.getElementById('resultsBadge');
-            const posEl = document.getElementById('resultsPosition');
-            const msgEl = document.getElementById('resultsMessage');
-
-            if (position === 1) {
-                badge.className = 'results-badge gold';
-                badge.textContent = '👑';
-                posEl.className = 'results-position gold';
-                posEl.textContent = '1º Lugar!';
-                msgEl.textContent = 'CAMPEÃO! Você é incrível!';
-                createConfetti();
-            } else if (position === 2) {
-                badge.className = 'results-badge silver';
-                badge.textContent = '🥈';
-                posEl.className = 'results-position silver';
-                posEl.textContent = '2º Lugar!';
-                msgEl.textContent = 'Quase lá! Excelente!';
-                createConfetti();
-            } else if (position === 3) {
-                badge.className = 'results-badge bronze';
-                badge.textContent = '🥉';
-                posEl.className = 'results-position bronze';
-                posEl.textContent = '3º Lugar!';
-                msgEl.textContent = 'No pódio! Muito bom!';
-                createConfetti();
-            } else {
-                badge.className = 'results-badge participant';
-                badge.textContent = '⭐';
-                posEl.className = 'results-position';
-                posEl.textContent = `${position}º Lugar`;
-                msgEl.textContent = 'Boa participação!';
-            }
-
-            document.getElementById('resultsScore').textContent = myScore;
-            document.getElementById('resultsPercent').textContent = `${percent}%`;
-
-            // Mini ranking
-            const posClasses = ['', 'gold', 'silver', 'bronze'];
-            document.getElementById('miniRanking').innerHTML = `
-                <div class="mini-ranking-title">🏆 Ranking</div>
-                ${sorted.slice(0, 5).map((p, i) => `
-                    <div class="mini-ranking-item ${p.id === playerId ? 'highlight' : ''}">
-                        <span class="mini-ranking-pos ${posClasses[i + 1] || ''}">${i + 1}º</span>
-                        <img class="mini-ranking-avatar" src="${p.photo || defaultAvatar}" alt="">
-                        <span class="mini-ranking-name">${p.name}</span>
-                        <span class="mini-ranking-score">${p.score}</span>
-                    </div>
-                `).join('')}
-            `;
-        }
-
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
-
-        function createConfetti() {
-            const container = document.getElementById('confettiContainer');
-            container.innerHTML = '';
-            const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A855F7', '#3B82F6', '#22C55E', '#F97316', '#EC4899'];
-            const shapes = ['■', '●', '▲', '★', '♦'];
-
-            for (let i = 0; i < 60; i++) {
-                const confetti = document.createElement('div');
-                confetti.className = 'confetti';
-                confetti.textContent = shapes[Math.floor(Math.random() * shapes.length)];
-                confetti.style.left = Math.random() * 100 + '%';
-                confetti.style.color = colors[Math.floor(Math.random() * colors.length)];
-                confetti.style.fontSize = (Math.random() * 16 + 8) + 'px';
-                confetti.style.animationDelay = Math.random() * 3 + 's';
-                confetti.style.animationDuration = (Math.random() * 2 + 3) + 's';
-                container.appendChild(confetti);
-            }
-
-            setTimeout(() => { container.innerHTML = ''; }, 6000);
-        }
-
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
+    <div class="animation-overlay" id="animationOverlay"><div id="animationContent"></div></div>
+    <div class="confetti-container" id="confettiContainer" aria-hidden="true"></div>
+    <script type="module" src="js/jogador.js"></script>
 </body>
 </html>

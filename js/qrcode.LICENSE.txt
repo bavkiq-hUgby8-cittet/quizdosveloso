@@ -1,0 +1,6 @@
+QRCode.js (qrcodejs) 1.0.0
+Copyright (c) davidshimjs
+Licença MIT
+https://github.com/davidshimjs/qrcodejs
+
+Copiado para o repositório para o quiz não depender do CDN na festa.
